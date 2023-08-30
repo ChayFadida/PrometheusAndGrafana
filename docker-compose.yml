@@ -1,0 +1,50 @@
+version: '3'
+services:
+  prometheus:
+    # running on port 9090
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/config/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml      
+      - ./volumes/prometheus-data:/prometheus
+
+  grafana:
+    # run on port 3000
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANAPASS}
+    volumes:
+      - ./volumes/grafana-data:/var/lib/grafana
+    restart: always
+    user: "0"
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+
+  cadvisor:
+    # run on port 8080
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    command:
+      - privileged=true
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:ro
+    - /sys:/sys:ro
+    - /dev/disk/:/dev/disk:ro
+    
+  nginx:
+    build:
+      dockerfile: Dockerfile.nginx
+    ports:
+      - 8084:8080
+    depends_on:
+      - prometheus
+      - cadvisor
+      - grafana
+      

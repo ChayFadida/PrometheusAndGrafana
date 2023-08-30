@@ -1,0 +1,54 @@
+groups:
+  - name: CPU
+    rules:
+      - record: node_CPU_Usage_Percentage
+        expr: 100 - (avg by(instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+      
+      - record: node_CPU_Usage_by_core
+        expr: 100 - (avg by (instance, cpu) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+
+  - name: Memory
+    rules:
+      - record: node_Memory_Usage_Percentage
+        expr: 100 * (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes - node_memory_SReclaimable_bytes) / node_memory_MemTotal_bytes
+      - record: containers_memory_by_image
+        expr: sum by (image) (container_memory_usage_bytes{image !=''}) / 1024 / 1024
+
+  - name: Disk
+    rules:
+      - record: node_Disk_Usage_Percentage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100
+
+  - name: disk-space-alerts
+    rules:
+      - alert: HighDiskUsage
+        expr: node_Memory_Usage_Percentage > 80
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 80%"
+
+  - name: cpu-alerts
+    rules:
+      - alert: cpu-usage
+        expr: node_CPU_Usage_Percentage > 80
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High cpu usage detected"
+          description: "cpu usage is above 80%"
+
+  - name: portfolio-instance
+    rules:
+      - alert: only-one-portfolio-instance
+        expr: count(container_last_seen{image="harbor.chay-techs.com/portfolio/portfolio-app:latest"}) < 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Less than 2 instance of portfolio"
+          description: "please scale up the portfolio app"
