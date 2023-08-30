@@ -39,8 +39,7 @@ services:
     - /dev/disk/:/dev/disk:ro
     
   nginx:
-    build:
-      dockerfile: Dockerfile.nginx
+    image: harbor.chay-techs.com/prometheusgrafana/nginx:latest
     ports:
       - 8084:8080
     depends_on:
