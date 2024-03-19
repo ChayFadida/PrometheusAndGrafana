@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    serviceMonitorSelector: prometheus
+    release: prometheus
+  name: prometheus-studforstud-exporter-development
+  namespace: prometheus
+spec:
+  endpoints:
+  - interval: 30s
+    targetPort: 5000
+    path: /metrics
+  namespaceSelector:
+    matchNames:
+    - stud-for-stud-development
+  selector:
+    matchLabels:
+      app: stud-for-stud
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    serviceMonitorSelector: prometheus
+    release: prometheus
+  name: prometheus-studforstud-exporter
+  namespace: prometheus
+spec:
+  endpoints:
+  - interval: 30s
+    targetPort: 5000
+    path: /metrics
+  namespaceSelector:
+    matchNames:
+    - stud-for-stud-production
+  selector:
+    matchLabels:
+      app: stud-for-stud
+
